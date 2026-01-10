@@ -1,6 +1,7 @@
 // Server component: premium admin restaurants list
 
-import { getRestaurants } from "@/app/lib/mock/admin";
+
+import axios from "axios";
 import Link from "next/link";
 
 export default async function AdminRestaurantsPage({
@@ -12,7 +13,7 @@ export default async function AdminRestaurantsPage({
   const page = parseInt(searchParams?.page || "1", 10) || 1;
   const pageSize = 12;
 
-  const data = await getRestaurants({ q, page, pageSize });
+     const {data} = await axios.get('https://fakerestaurantapi.runasp.net/api/Restaurant')
 
   return (
     <main className="h-screen flex flex-col px-6 py-6 max-w-[1200px] mx-auto">
@@ -61,29 +62,29 @@ export default async function AdminRestaurantsPage({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {data.items.map((r) => (
-                <tr key={r.id} className="hover:bg-gray-50 transition">
+              {data.map((item,id) => (
+                <tr key={id} className="hover:bg-gray-50 transition">
                   <td className="px-6 py-4">
-                    <Link href={`/admin/hotel/${r.id}`} className="font-semibold text-gray-900 hover:text-green-600 transition">
-                      {r.name}
+                    <Link href={`/admin/hotel/${item.restaurantID}`} className="font-semibold text-gray-900 hover:text-green-600 transition">
+                      {item.restaurantName}
                     </Link>
-                    <div className="text-xs text-gray-400 mt-0.5">{r.id}</div>
+                    <div className="text-xs text-gray-400 mt-0.5">{item.restaurantID}</div>
                   </td>
-                  <td className="px-6 py-4 text-gray-700">{r.city ?? "—"}</td>
-                  <td className="px-6 py-4 text-gray-700">{r.rating ? `${r.rating} ★` : "—"}</td>
+                  <td className="px-6 py-4 text-gray-700">{item.address ?? "—"}</td>
+                  <td className="px-6 py-4 text-gray-700">{item.rating ? `${item.rating} ★` : "—"}</td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${
-                      r.isActive ? "bg-gradient-to-r from-green-400 to-green-600" : "bg-gradient-to-r from-red-400 to-red-600"
+                      item.isActive ? "bg-gradient-to-r from-green-400 to-green-600" : "bg-gradient-to-r from-red-400 to-red-600"
                     }`}>
-                      {r.isActive ? "Active" : "Disabled"}
+                      {item.isActive ? "Active" : "Disabled"}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      <Link href={`/admin/hotel/${r.id}/edit`}>
+                      <Link href={`/admin/hotel/${item.id}/edit`}>
                         <button className="px-3 py-1 rounded-lg border text-sm hover:bg-gray-50 transition">Edit</button>
                       </Link>
-                      <Link href={`/admin/hotel/${r.id}`}>
+                      <Link href={`/admin/hotel/${item.id}`}>
                         <button className="px-3 py-1 rounded-lg border text-sm hover:bg-gray-50 transition">View</button>
                       </Link>
                     </div>
@@ -98,7 +99,7 @@ export default async function AdminRestaurantsPage({
       {/* PAGINATION */}
       <div className="mt-6 flex flex-col sm:flex-row justify-between items-center text-sm gap-3">
         <div className="text-gray-500">
-          Showing {data.items.length} of {data.total} restaurants
+        
         </div>
 
         <div className="flex gap-2 items-center">
