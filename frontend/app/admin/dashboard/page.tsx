@@ -12,7 +12,7 @@ import localClient from "@/app/lib/localClient";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
-    hotels: 0,
+    hotels: 10,
     orders: 0,
     users: 0,
     revenue: 0,
@@ -93,7 +93,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* RECENT ACTIVITY */}
-      <div className="bg-white rounded-2xl shadow-sm p-6">
+      <div className="  bg-white rounded-2xl shadow-sm p-6">
         <h2 className="text-lg font-semibold mb-4">
           Recent Activity
         </h2>
@@ -104,6 +104,8 @@ export default function AdminDashboard() {
           <li>👤 New user registered</li>
           <li>💰 Payment received</li>
         </ul>
+
+ 
       </div>
     </div>
   );
