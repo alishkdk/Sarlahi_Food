@@ -1,23 +1,23 @@
 // Server component: premium restaurant detail / overview
-import { getRestaurantById } from "@/app/lib/mock/admin";
+
+import axios from "axios";
 import Link from "next/link";
 
-export default async function RestaurantDetailPage({
+export default async function RestaurantDetailPage ({
   params,
 }: {
   params: { id: string };
 }) {
   const id = params.id;
-  const r = await getRestaurantById(id);
-
+     const {data} = await axios.get('https://fakerestaurantapi.runasp.net/api/Restaurant/')
   return (
     <main className="max-w-6xl mx-auto px-6 py-8">
       {/* HEADER */}
       <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6 border-b border-gray-200 pb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{r.name}</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{data.restaurantName}</h1>
           <p className="mt-1 text-sm text-gray-500">
-            {r.cuisine?.join(", ") ?? "—"} • {r.city ?? "—"}
+            {data.cuisine?.join(", ") ?? "—"} • {data.address ?? "—"}
           </p>
         </div>
 
@@ -44,24 +44,24 @@ export default async function RestaurantDetailPage({
           <h3 className="text-lg font-semibold text-gray-900">Details</h3>
 
           <p className="mt-4 text-gray-700 text-sm leading-relaxed">
-            {r.description ?? "No description provided."}
+            {data.description ?? "No description provided."}
           </p>
 
           <dl className="mt-6 grid grid-cols-[120px_1fr] gap-y-3 gap-x-4 text-sm">
             <dt className="text-gray-500">ID</dt>
-            <dd className="text-gray-900">{r.id}</dd>
+            <dd className="text-gray-900">{data.restaurantID}</dd>
 
             <dt className="text-gray-500">Phone</dt>
-            <dd className="text-gray-900">{r.phone ?? "—"}</dd>
+            <dd className="text-gray-900">{data.phone ?? "—"}</dd>
 
             <dt className="text-gray-500">Address</dt>
-            <dd className="text-gray-900">{r.address ?? "—"}</dd>
+            <dd className="text-gray-900">{data.address ?? "—"}</dd>
 
             <dt className="text-gray-500">Rating</dt>
-            <dd className="text-gray-900">{r.rating ? `${r.rating} ★` : "—"}</dd>
+            <dd className="text-gray-900">{data.rating ? `${data.rating} ★` : "—"}</dd>
 
             <dt className="text-gray-500">Created</dt>
-            <dd className="text-gray-900">{r.createdAt ?? "—"}</dd>
+            <dd className="text-gray-900">{data.createdAt ?? "—"}</dd>
           </dl>
         </div>
 
@@ -72,10 +72,10 @@ export default async function RestaurantDetailPage({
           <div className="mt-3">
             <span
               className={`inline-flex items-center px-4 py-1 rounded-full text-xs font-semibold text-white 
-                ${r.isActive ? "bg-gradient-to-r from-green-400 to-green-600" : "bg-gradient-to-r from-red-400 to-red-600"}
+                ${data.isActive ? "bg-gradient-to-r from-green-400 to-green-600" : "bg-gradient-to-r from-red-400 to-red-600"}
               `}
             >
-              {r.isActive ? "Active" : "Disabled"}
+              {data.isActive ? "Active" : "Disabled"}
             </span>
           </div>
 
