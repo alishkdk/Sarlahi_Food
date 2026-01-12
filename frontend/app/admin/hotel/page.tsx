@@ -4,16 +4,32 @@
 import axios from "axios";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminRestaurantsPage({
   searchParams,
 }: {
-  searchParams?: { q?: string; page?: string };
+  searchParams?: Promise<{ q?: string; page?: string }>;
 }) {
-  const q = (searchParams?.q || "").trim();
-  const page = parseInt(searchParams?.page || "1", 10) || 1;
-  const pageSize = 12;
+  const sp = (await searchParams) || {};
+  const q = (sp.q || "").trim();
+  const page = parseInt(sp.page || "1", 10) || 1;
 
-     const {data} = await axios.get('https://fakerestaurantapi.runasp.net/api/Restaurant')
+  let data: any[] = [];
+
+  try {
+    const res = await axios.get(
+      "https://fakerestaurantapi.runasp.net/api/Restaurant",
+      { headers: { "Cache-Control": "no-store" } }
+    );
+    data = res.data;
+  } catch {
+    return (
+      <main className="py-24 text-center text-red-600">
+        Failed to load restaurants
+      </main>
+    );
+  }
 
   return (
     <main className="h-screen flex flex-col px-6 py-6 max-w-[1200px] mx-auto">
@@ -84,7 +100,7 @@ export default async function AdminRestaurantsPage({
                       <Link href={`/admin/hotel/${item.id}/edit`}>
                         <button className="px-3 py-1 rounded-lg border text-sm hover:bg-gray-50 transition">Edit</button>
                       </Link>
-                      <Link href={`/admin/hotel/${item.id}`}>
+                      <Link href={`/admin/hotel/${item.restaurantID}`}>
                         <button className="px-3 py-1 rounded-lg border text-sm hover:bg-gray-50 transition">View</button>
                       </Link>
                     </div>
