@@ -1,11 +1,27 @@
 
 import InviteButton from "@/app/components/InviteButton";
-import { getUsers } from "@/app/lib/mock/admin";
+import axios from "axios";
+
 import Link from "next/link";
 
 
 export default async function AdminUsersPage() {
-  const data = await getUsers();
+ 
+  let data: any[] = [];
+
+  try {
+    const res = await axios.get(
+      "https://fakestoreapi.com/users",
+      { headers: { "Cache-Control": "no-store" } }
+    );
+    data = res.data;
+  } catch {
+    return (
+      <main className="py-24 text-center text-red-600">
+        Failed to load restaurants
+      </main>
+    );
+  }
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-6">
@@ -21,20 +37,21 @@ export default async function AdminUsersPage() {
         <table className="w-full text-left">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-3">Name</th>
+              <th className="px-4 py-3">First Name</th>
+              <th className="px-4 py-3">Last Name</th>
               <th className="px-4 py-3">Email</th>
-              <th className="px-4 py-3">Role</th>
+              <th className="px-4 py-3">UserName</th>
               <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {data.items.map((u) => (
-              <tr key={u.id} className="border-b hover:bg-gray-50">
+            {data.map((u,id) => (
+              <tr key={id} className="border-b hover:bg-gray-50">
                 <td className="px-4 py-3 font-semibold text-gray-900">
-                  <Link href={`/admin/users/${u.id}`}>{u.name}</Link>
-                </td>
+                  <Link href={`/admin/users/${u.id}`}>{u.name.firstname}</Link></td>
+                <td className="px-4 py-3">{u.name.lastname}</td>
                 <td className="px-4 py-3">{u.email}</td>
-                <td className="px-4 py-3">{u.role}</td>
+                <td className="px-4 py-3">{u.username}</td>
                 <td className="px-4 py-3">
                   <Link href={`/admin/users/${u.id}`}>
                     <button className="px-3 py-1 rounded-lg border hover:bg-gray-100 transition">
