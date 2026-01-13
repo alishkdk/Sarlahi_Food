@@ -18,7 +18,7 @@ export default async function AdminUsersPage() {
   } catch {
     return (
       <main className="py-24 text-center text-red-600">
-        Failed to load restaurants
+        Failed to load users
       </main>
     );
   }
