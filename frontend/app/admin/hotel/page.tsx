@@ -1,151 +1,327 @@
-// Server component: premium admin restaurants list
+"use client";
 
-
+import { useEffect, useState } from "react";
+import { Edit, Trash2, X, RefreshCcw } from "lucide-react";
 import axios from "axios";
-import Link from "next/link";
 
-export const dynamic = "force-dynamic";
+export default function ProductsTable() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [displayed, setDisplayed] = useState<any[]>([]);
 
-export default async function AdminRestaurantsPage({
-  searchParams,
-}: {
-  searchParams?: Promise<{ q?: string; page?: string }>;
-}) {
-  const sp = (await searchParams) || {};
-  const q = (sp.q || "").trim();
-  const page = parseInt(sp.page || "1", 10) || 1;
+  const [open, setOpen] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const [current, setCurrent] = useState<any>(null);
 
-  let data: any[] = [];
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  try {
-    const res = await axios.get(
-      "https://fakerestaurantapi.runasp.net/api/Restaurant",
-      { headers: { "Cache-Control": "no-store" } }
+  const [form, setForm] = useState({
+    title: "",
+    price: "",
+    description: "",
+    category: "",
+    image: "",
+  });
+
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+
+  const isMobile =
+    typeof window !== "undefined" && window.innerWidth < 768;
+
+
+  const fetchProducts = async () => {
+    try {
+      const { data } = await axios.get(
+        "https://fakestoreapi.com/products"
+      );
+      setProducts(data);
+      setPage(1);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+
+  useEffect(() => {
+    const filtered = products.filter(
+      (p) =>
+        p.title.toLowerCase().includes(search.toLowerCase()) ||
+        p.category.toLowerCase().includes(search.toLowerCase())
     );
-    data = res.data;
-  } catch {
-    return (
-      <main className="py-24 text-center text-red-600">
-        Failed to load restaurants
-      </main>
-    );
-  }
 
+    const start = (page - 1) * pageSize;
+    setDisplayed(filtered.slice(start, start + pageSize));
+  }, [products, search, page]);
+
+  const totalPages = Math.ceil(
+    products.filter(
+      (p) =>
+        p.title.toLowerCase().includes(search.toLowerCase()) ||
+        p.category.toLowerCase().includes(search.toLowerCase())
+    ).length / pageSize
+  );
+
+
+  const openAdd = () => {
+    setForm({
+      title: "",
+      price: "",
+      description: "",
+      category: "",
+      image: "",
+    });
+    setIsEdit(false);
+    setOpen(true);
+  };
+
+  const openEdit = (item: any) => {
+    setForm(item);
+    setCurrent(item);
+    setIsEdit(true);
+    setOpen(true);
+  };
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+
+    if (isEdit) {
+      await axios.put(
+        `https://fakestoreapi.com/products/${current.id}`,
+        form
+      );
+    } else {
+      await axios.post(
+        "https://fakestoreapi.com/products",
+        form
+      );
+    }
+
+    setOpen(false);
+    fetchProducts();
+  };
+
+
+  const openDelete = (id: number) => {
+    setDeleteId(id);
+    setDeleteOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+
+    await axios.delete(
+      `https://fakestoreapi.com/products/${deleteId}`
+    );
+
+    setDeleteOpen(false);
+    setDeleteId(null);
+    fetchProducts();
+  };
+
+ 
   return (
-    <main className="h-screen flex flex-col px-6 py-6 max-w-[1200px] mx-auto">
-      
-      {/* HEADER */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-gray-200">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Restaurants</h1>
-          <p className="text-gray-500 mt-1">Manage partner restaurants — search, edit, enable/disable.</p>
-        </div>
+    <div className="p-6 max-w-6xl mx-auto">
+    
+      <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
+        <h1 className="text-2xl font-bold">Products</h1>
 
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-3 md:mt-0">
-          {/* Search */}
-          <form method="get" className="flex gap-2 w-full sm:w-auto">
-            <input
-              name="q"
-              defaultValue={q}
-              placeholder="Search by name or city..."
-              className="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:outline-none text-sm flex-1"
-            />
-            <button className="px-5 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition">
-              Search
-            </button>
-          </form>
+        <div className="flex gap-2 flex-wrap">
+          <input
+            type="text"
+            placeholder="Search..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="px-4 py-2 border rounded-lg"
+          />
 
-          {/* New restaurant */}
-          <Link href="/admin/restaurants/new" className="w-full sm:w-auto">
-            <button className="px-5 py-2 rounded-lg bg-white border border-gray-300 text-sm font-semibold hover:bg-gray-50 transition w-full sm:w-auto">
-              New
-            </button>
-          </Link>
+          <button
+            onClick={openAdd}
+            className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800"
+          >
+            Add Product
+          </button>
+
+          <button
+            onClick={fetchProducts}
+            className="p-2 border rounded-lg hover:bg-gray-100"
+          >
+            <RefreshCcw size={18} />
+          </button>
         </div>
-      </header>
+      </div>
 
       {/* TABLE */}
-      <div className="mt-6 bg-white shadow rounded-xl overflow-hidden flex-1 flex flex-col">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 sticky top-0 z-10">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">City</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Rating</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-44">Actions</th>
+      <div className="overflow-x-auto bg-white rounded-xl shadow">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-100 text-gray-600">
+            <tr>
+              <th className="px-4 py-3 text-left">Title</th>
+              <th className="px-4 py-3">Price</th>
+              <th className="px-4 py-3">Category</th>
+              <th className="px-4 py-3 text-right">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {displayed.map((item) => (
+              <tr
+                key={item.id}
+                className="border-t hover:bg-gray-50"
+              >
+                <td className="px-4 py-3">{item.title}</td>
+                <td className="px-4 py-3">${item.price}</td>
+                <td className="px-4 py-3">{item.category}</td>
+                <td className="px-4 py-3 flex justify-end gap-2">
+                  <button
+                    onClick={() => openEdit(item)}
+                    className="p-2 border rounded hover:bg-gray-100"
+                  >
+                    <Edit size={16} />
+                  </button>
+
+                  <button
+                    onClick={() => openDelete(item.id)}
+                    className="p-2 border rounded hover:bg-red-100 text-red-600"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {data.map((item,id) => (
-                <tr key={id} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-4">
-                    <Link href={`/admin/hotel/${item.restaurantID}`} className="font-semibold text-gray-900 hover:text-green-600 transition">
-                      {item.restaurantName}
-                    </Link>
-                    <div className="text-xs text-gray-400 mt-0.5">{item.restaurantID}</div>
-                  </td>
-                  <td className="px-6 py-4 text-gray-700">{item.address ?? "—"}</td>
-                  <td className="px-6 py-4 text-gray-700">{item.rating ? `${item.rating} ★` : "—"}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${
-                      item.isActive ? "bg-gradient-to-r from-green-400 to-green-600" : "bg-gradient-to-r from-red-400 to-red-600"
-                    }`}>
-                      {item.isActive ? "Active" : "Disabled"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-2">
-                      <Link href={`/admin/hotel/${item.id}/edit`}>
-                        <button className="px-3 py-1 rounded-lg border text-sm hover:bg-gray-50 transition">Edit</button>
-                      </Link>
-                      <Link href={`/admin/hotel/${item.restaurantID}`}>
-                        <button className="px-3 py-1 rounded-lg border text-sm hover:bg-gray-50 transition">View</button>
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* PAGINATION */}
-      <div className="mt-6 flex flex-col sm:flex-row justify-between items-center text-sm gap-3">
-        <div className="text-gray-500">
-        
-        </div>
+      <div className="flex justify-between items-center mt-4">
+        <button
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={page === 1}
+          className="px-3 py-1 border rounded disabled:opacity-50"
+        >
+          Prev
+        </button>
 
-        <div className="flex gap-2 items-center">
-          <Link
-            href={`/admin/restaurants?page=${Math.max(
-              1,
-              page - 1
-            )}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
-          >
-            <button
-              disabled={page <= 1}
-              className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 disabled:opacity-50 hover:bg-gray-50 transition"
-            >
-              Prev
-            </button>
-          </Link>
+        <span>
+          Page {page} of {totalPages || 1}
+        </span>
 
-          <span className="text-gray-700 font-medium">Page {data.page}</span>
-
-          <Link
-            href={`/admin/restaurants?page=${data.page + 1}${
-              q ? `&q=${encodeURIComponent(q)}` : ""
-            }`}
-          >
-            <button className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition">
-              Next
-            </button>
-          </Link>
-        </div>
+        <button
+          onClick={() =>
+            setPage((p) => Math.min(totalPages, p + 1))
+          }
+          disabled={page === totalPages}
+          className="px-3 py-1 border rounded disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
-    </main>
+
+      {open && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-end md:items-center justify-center">
+          <div
+            className={`bg-white w-full ${
+              isMobile
+                ? "rounded-t-2xl"
+                : "rounded-xl max-w-lg"
+            } p-6`}
+          >
+            <div className="flex justify-between mb-4">
+              <h2 className="text-lg font-semibold">
+                {isEdit ? "Edit Product" : "Add Product"}
+              </h2>
+              <button onClick={() => setOpen(false)}>
+                <X />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-3"
+            >
+            
+              {["title", "price", "category", "image"].map(
+                 
+                (field) => (
+                 
+                  <input
+                    key={field}
+                    type={field === "price" ? "number" : "text"}
+                    placeholder={field}
+                    value={(form as any)[field]}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        [field]: e.target.value,
+                      })
+                    }
+                    className="w-full border rounded-lg px-4 py-2"
+                    required
+                  />
+                 
+                )
+              )}
+
+              <textarea
+                placeholder="Description"
+                value={form.description}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    description: e.target.value,
+                  })
+                }
+                className="w-full border rounded-lg px-4 py-2"
+              />
+
+              <button
+                type="submit"
+                className="w-full bg-green-700 text-white py-2 rounded-lg hover:bg-green-800"
+              >
+                {isEdit ? "Update" : "Create"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+     
+      {deleteOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+          <div className="bg-white max-w-sm w-full rounded-xl p-6">
+            <h2 className="text-lg font-semibold">
+              Delete Product
+            </h2>
+
+            <p className="text-sm text-gray-600 mt-2">
+              Are you sure you want to delete this product?
+              This action cannot be undone.
+            </p>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setDeleteOpen(false)}
+                className="px-4 py-2 border rounded-lg"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
