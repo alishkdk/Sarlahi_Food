@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import {
   Hotel,
   ShoppingBag,
@@ -9,8 +9,42 @@ import {
 } from "lucide-react";
 import localClient from "@/app/lib/localClient";
 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  TooltipContentProps,
+  TooltipIndex,
+} from 'recharts';
+import axios from "axios";
 
-export default function AdminDashboard() {
+
+
+const CustomTooltip = ({ active, payload, label }: TooltipContentProps<string | number, string>) => {
+  const isVisible = active && payload && payload.length;
+  return (
+    <div className="custom-tooltip" style={{ visibility: isVisible ? 'visible' : 'hidden' }}>
+      {isVisible && (
+        <>
+          <p className="label">{`${label} : ${payload[0].value}`}</p>
+          
+    
+        </>
+      )}
+    </div>
+  );
+};
+
+const AdminDashboard = ( {isAnimationActive = true,
+  defaultIndex,
+}: {
+  isAnimationActive?: boolean;
+  defaultIndex?: TooltipIndex;
+}) => {
   const [stats, setStats] = useState({
     hotels: 10,
     orders: 0,
@@ -49,6 +83,29 @@ export default function AdminDashboard() {
       color: "bg-orange-500",
     },
   ];
+const[data, setData]= useState([])
+
+  const fetchProduct= async()=>{
+    const {data}=await axios.get(' https://api.escuelajs.co/api/v1/products')
+    const categoryMap={}
+    data.map((item)=>{
+      if(categoryMap[item.category.name]){
+        categoryMap[item.category.name]++
+      }else{
+        categoryMap[item.category.name]=1
+      }
+    })
+    const output = Object.entries(categoryMap).map(item=>{
+       return {category:item[0] ,productQuantity:item[1]}
+    })
+
+    setData(output)
+  }
+
+  useEffect(()=>{
+    fetchProduct()
+  },[])
+
 
   return (
     <div className="space-y-8">
@@ -61,6 +118,23 @@ export default function AdminDashboard() {
           Overview of your platform
         </p>
       </div>
+
+ <BarChart
+      style={{ width: '100%', maxWidth: '300px', maxHeight: '70vh', aspectRatio: 1.618 }}
+      responsive
+      data={data}
+      margin={{
+        top: 0,
+      
+      }}
+    >
+      <CartesianGrid />
+      <XAxis dataKey="category" />
+      <YAxis width="auto" />
+      <Tooltip content={CustomTooltip} isAnimationActive={isAnimationActive} defaultIndex={defaultIndex} />
+      <Legend />
+      <Bar dataKey="productQuantity" barSize={20} fill="#8884d8" isAnimationActive={isAnimationActive} />
+    </BarChart>
 
       {/* STATS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
@@ -109,4 +183,6 @@ export default function AdminDashboard() {
       </div>
     </div>
   );
-}
+};
+
+export default AdminDashboard;
