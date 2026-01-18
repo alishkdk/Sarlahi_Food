@@ -1,27 +1,28 @@
-
+"use client"
 import InviteButton from "@/app/components/InviteButton";
-import axios from "axios";
+import { gql } from "@apollo/client";
 
+import { useQuery } from "@apollo/client/react";
 import Link from "next/link";
 
+const GET_USERS = gql`
+query GetUsers{
+users{
+id
+name
+email
+role
+}
+}
+`
 
-export default async function AdminUsersPage() {
- 
-  let data: any[] = [];
 
-  try {
-    const res = await axios.get(
-      "https://fakestoreapi.com/users",
-      { headers: { "Cache-Control": "no-store" } }
-    );
-    data = res.data;
-  } catch {
-    return (
-      <main className="py-24 text-center text-red-600">
-        Failed to load users
-      </main>
-    );
-  }
+
+export default  function AdminUsersPage() {
+ const {loading, error ,data}=useQuery(GET_USERS);
+ if(loading) return "Laoding..."
+ if(error) return `Error ! ${error.message}`;
+
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-6">
@@ -37,23 +38,21 @@ export default async function AdminUsersPage() {
         <table className="w-full text-left">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-3">First Name</th>
-              <th className="px-4 py-3">Last Name</th>
+              <th className="px-4 py-3">Name</th>
               <th className="px-4 py-3">Email</th>
-              <th className="px-4 py-3">UserName</th>
+              <th className="px-4 py-3">Role</th>
               <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {data.map((u,id) => (
+            {data.users.map((item,id) => (
               <tr key={id} className="border-b hover:bg-gray-50">
                 <td className="px-4 py-3 font-semibold text-gray-900">
-                  <Link href={`/admin/users/${u.id}`}>{u.name.firstname}</Link></td>
-                <td className="px-4 py-3">{u.name.lastname}</td>
-                <td className="px-4 py-3">{u.email}</td>
-                <td className="px-4 py-3">{u.username}</td>
+                  <Link href={`/admin/users/${item.id}`}>{item.name}</Link></td>
+                <td className="px-4 py-3">{item.email}</td>
+                <td className="px-4 py-3">{item.role}</td>
                 <td className="px-4 py-3">
-                  <Link href={`/admin/users/${u.id}`}>
+                  <Link href={`/admin/users/${item.id}`}>
                     <button className="px-3 py-1 rounded-lg border hover:bg-gray-100 transition">
                       View
                     </button>
